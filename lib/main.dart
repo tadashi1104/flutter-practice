@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+enum Answers { YES, NO }
+
 void main() {
   debugPaintSizeEnabled = false;
   runApp(MyApp());
@@ -9,71 +11,8 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        home: Scaffold(
-          appBar: AppBar(
-            leading: Icon(Icons.menu),
-            title: const Text('AppBar'),
-            backgroundColor: Colors.orange,
-            centerTitle: true,
-            actions: <Widget>[
-              IconButton(
-                icon: Icon(
-                  Icons.face,
-                  color: Colors.white,
-                ),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.email,
-                  color: Colors.white,
-                ),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.favorite,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          bottomNavigationBar: MyBottomNavigationBar(),
-        ),
-        );
+    return MaterialApp(home: MainPage());
   }
-}
-
-class MyBottomNavigationBar extends StatefulWidget {
-  @override
-  _MyBottomNavigationBar createState() => _MyBottomNavigationBar();
-}
-
-class _MyBottomNavigationBar extends State<MyBottomNavigationBar>{
-  int _currentIndex = 0;
-  final _pageWidgets = [
-    PageWidget(color: Colors.white, title: 'Home'),
-    PageWidget(color: Colors.blue, title: 'Album'),
-    PageWidget(color: Colors.orange, title: 'Chat'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('Home')),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.photo_album), title: Text('Album')),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), title: Text('Chat')),
-        ],
-        currentIndex: _currentIndex,
-        fixedColor: Colors.blueAccent,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-    );
-  }
-
-  void _onItemTapped(int index) => setState(() => _currentIndex = index);
-
 }
 
 class MainPage extends StatefulWidget {
@@ -82,37 +21,216 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int _currentIndex = 0;
-  final _pageWidgets = [
-    PageWidget(color: Colors.white, title: 'Home'),
-    PageWidget(color: Colors.blue, title: 'Album'),
-    PageWidget(color: Colors.orange, title: 'Chat'),
-  ];
+  String _value = '';
+
+  void _setValue(String value) => setState(() => _value = value);
+
+  Future _showDialog() async {
+    var value = await showDialog(
+      context: context,
+      builder: (BuildContext context) => new AlertDialog(
+        title: new Text('AlertDialog'),
+        content: new Text('アラートダイアログです。YesかNoを選択してください。'),
+        actions: <Widget>[
+          new SimpleDialogOption(
+            child: new Text('Yes'),
+            onPressed: () {
+              Navigator.pop(context, Answers.YES);
+            },
+          ),
+          new SimpleDialogOption(
+            child: new Text('NO'),
+            onPressed: () {
+              Navigator.pop(context, Answers.NO);
+            },
+          ),
+        ],
+      ),
+    );
+    switch (value) {
+      case Answers.YES:
+        _setValue('Yes');
+        break;
+      case Answers.NO:
+        _setValue('NO');
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: MyDrawer(),
       appBar: AppBar(
-        title: Text('BottomNavigationBar'),
-      ),
-      body: _pageWidgets.elementAt(_currentIndex),
-      bottomNavigationBar: BottomNavigationBar(
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('Home')),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.photo_album), title: Text('Album')),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), title: Text('Chat')),
+        title: const Text('AppBar'),
+        backgroundColor: Colors.orange,
+        centerTitle: true,
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(
+              Icons.face,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              _showDialog();
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.email,
+              color: Colors.white,
+            ),
+            onPressed: (null),
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.favorite,
+              color: Colors.white,
+            ),
+            onPressed: null,
+          ),
         ],
-        currentIndex: _currentIndex,
-        fixedColor: Colors.blueAccent,
-        onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
       ),
+      // body: new Container(
+      //   padding: new EdgeInsets.all(32.0),
+      //   child: new Center(
+      //     child: new Column(
+      //       children: <Widget>[
+      //         new Text(
+      //           _value,
+      //           style: TextStyle(
+      //               fontSize: 50,
+      //               color: Colors.blueAccent,
+      //               fontWeight: FontWeight.w600),
+      //         ),
+      //         new RaisedButton(
+      //           onPressed: _showDialog,
+      //           child: new Text('ダイアログを開く'),
+      //         )
+      //       ],
+      //     ),
+      //   ),
+      // ),
+      // body: Center(child: Text('Hello World.')),
+      body: CustomScrollView(
+        slivers: <Widget>[
+          SliverFixedExtentList(
+            itemExtent: 200.0,
+            delegate: SliverChildBuilderDelegate(
+              (BuildContext context, int index) {
+                return Container(
+                  alignment: Alignment.center,
+                  color: Colors.yellow[100 * (index % 9)],
+                  child: Text(
+                    'list item $index $_value',
+                    style: TextStyle(fontSize: 30),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: MyBottomNavigationBar(),
+    );
+  }
+}
+
+class MyDrawer extends StatefulWidget {
+  @override
+  _MyDrawer createState() => _MyDrawer();
+}
+
+class _MyDrawer extends State<MyDrawer> {
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        children: <Widget>[
+          DrawerHeader(
+            child: Text('Drawer Header'),
+            decoration: BoxDecoration(
+              color: Colors.blue,
+            ),
+          ),
+          ListTile(
+            title: Text("Item 1"),
+            trailing: Icon(Icons.arrow_forward),
+          ),
+          ListTile(
+            title: Text("Item 2"),
+            trailing: Icon(Icons.arrow_forward),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class MyBottomNavigationBar extends StatefulWidget {
+  @override
+  _MyBottomNavigationBar createState() => _MyBottomNavigationBar();
+}
+
+class _MyBottomNavigationBar extends State<MyBottomNavigationBar> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return BottomNavigationBar(
+      items: <BottomNavigationBarItem>[
+        BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('Home')),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.photo_album), title: Text('Album')),
+        BottomNavigationBarItem(icon: Icon(Icons.chat), title: Text('Chat')),
+      ],
+      currentIndex: _currentIndex,
+      fixedColor: Colors.orange,
+      onTap: _onItemTapped,
+      type: BottomNavigationBarType.fixed,
     );
   }
 
   void _onItemTapped(int index) => setState(() => _currentIndex = index);
 }
+
+// class MainPage extends StatefulWidget {
+//   @override
+//   _MainPageState createState() => _MainPageState();
+// }
+
+// class _MainPageState extends State<MainPage> {
+//   int _currentIndex = 0;
+//   final _pageWidgets = [
+//     PageWidget(color: Colors.white, title: 'Home'),
+//     PageWidget(color: Colors.blue, title: 'Album'),
+//     PageWidget(color: Colors.orange, title: 'Chat'),
+//   ];
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('BottomNavigationBar'),
+//       ),
+//       body: _pageWidgets.elementAt(_currentIndex),
+//       bottomNavigationBar: BottomNavigationBar(
+//         items: <BottomNavigationBarItem>[
+//           BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('Home')),
+//           BottomNavigationBarItem(
+//               icon: Icon(Icons.photo_album), title: Text('Album')),
+//           BottomNavigationBarItem(icon: Icon(Icons.chat), title: Text('Chat')),
+//         ],
+//         currentIndex: _currentIndex,
+//         fixedColor: Colors.blueAccent,
+//         onTap: _onItemTapped,
+//         type: BottomNavigationBarType.fixed,
+//       ),
+//     );
+//   }
+
+//   void _onItemTapped(int index) => setState(() => _currentIndex = index);
+// }
 
 class PageWidget extends StatelessWidget {
   final Color color;
@@ -198,25 +316,25 @@ class PageWidget extends StatelessWidget {
 //   }
 // }
 
-Widget _menuItem(String title, Icon icon) {
-  return Container(
-    decoration: new BoxDecoration(
-        border: new Border(bottom: BorderSide(width: 1.0, color: Colors.grey))),
-    child: ListTile(
-      leading: icon,
-      title: Text(
-        title,
-        style: TextStyle(color: Colors.black, fontSize: 18.0),
-      ),
-      onTap: () {
-        print("onTap called.");
-      }, // タップ
-      onLongPress: () {
-        print("onLongPress called.");
-      }, // 長押し
-    ),
-  );
-}
+// Widget _menuItem(String title, Icon icon) {
+//   return Container(
+//     decoration: new BoxDecoration(
+//         border: new Border(bottom: BorderSide(width: 1.0, color: Colors.grey))),
+//     child: ListTile(
+//       leading: icon,
+//       title: Text(
+//         title,
+//         style: TextStyle(color: Colors.black, fontSize: 18.0),
+//       ),
+//       onTap: () {
+//         print("onTap called.");
+//       }, // タップ
+//       onLongPress: () {
+//         print("onLongPress called.");
+//       }, // 長押し
+//     ),
+//   );
+// }
 
 class TutorialHome extends StatelessWidget {
   @override
